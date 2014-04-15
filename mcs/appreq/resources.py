@@ -4,10 +4,15 @@ from tastypie.authentication import Authentication, MultiAuthentication
 from tastypie.authentication import BasicAuthentication, ApiKeyAuthentication
 from tastypie.authorization import Authorization
 from tastypie.validation import Validation
+from tastypie.authorization import Authorization
+from tastypie.exceptions import Unauthorized
+from django.utils.timezone import now
+
 
 class CustomValidation(Validation):
 
-    required = ['request_no']
+    fn_len, ln_length, cnic_len = 4, 4, 13
+    required = ['request_no', 'first_name', 'last_name', 'license_type', 'mineral_type', 'total_area']
     unique = ['request_no']
 
     # TODO: validate empty strings, invalid integers, data types (can't put strings instead of integers) 
@@ -15,21 +20,21 @@ class CustomValidation(Validation):
         if not bundle.data:
             return self.raise_error('Invalid data!')
 
-        cnic = self.validate_cnic(bundle.data)
-        if not cnic['success']: return cnic
-
         for key in self.required:
             v = bundle.data[key]
             if isinstance(v, basestring) and  len(v) <= 0:
-                return self.raise_error("%s can't be empty" %(key,))
+                return self.raise_error("%s is a required field!" %(''.join(x for x in key.title()).replace('_',"  "),))
+
+        cnic = self.validate_cnic(bundle.data)
+        if 'success' in cnic and cnic['success']: return cnic
 
     def validate_cnic(self, data):
         cnic = data['cnic'] if 'cnic' in data else None
         if cnic is None:
-            return self.raise_error('You must provide a valid CNIC!')
+            return self.raise_error('CNIC must be {self.cnic_len} digits (No dashes)!')
 
-        if cnic and len(str(cnic)) != 15:
-            return self.raise_error('CNIC must be 15 digits (No dashes)!')
+        if cnic and len(str(cnic)) != self.cnic_len:
+            return self.raise_error('CNIC must be {self.cnic_len} digits (No dashes)!')
         return {}
 
     def raise_error(self, msg):
@@ -43,7 +48,7 @@ class RequestResource(ModelResource):
         allowed_methods = ['get', 'post']
         always_return_data = True
         queryset = RequestModel.objects.all()
-        resource_name = 'appreq'
+        resource_name = 'requests'
         always_return_data = True
         field_list_to_remove = ['id', 'first_name', 'middle_name', 'last_name', 'email', 'location','phone', 'total_area', 'request_status_remarks', 'unit_type', 'topo_sheet']
         validation = CustomValidation()
@@ -52,10 +57,17 @@ class RequestResource(ModelResource):
         # authentication = MultiAuthentication(BasicAuthentication(), ApiKeyAuthentication())
         authorization = Authorization()
 
+    def hydrate(self, bundle):
+        if bundle and bundle.data:
+            bundle.data['request_date'] = now()#datetime.now()
+            bundle.data['request_status_date'] = now()#datetime.now()
+            bundle.data['request_status_remarks'] = 'No comments!'
+        return bundle
+
     def dehydrate(self, bundle):
-        print "dehydrate", bundle
+        # print "dehydrate"
         f, m, l  = bundle.obj.first_name, bundle.obj.middle_name, bundle.obj.last_name
-        bundle.data['request_by'] = '%s %s %s' %(f if f else '', m if m else '', l if l else '')
+        bundle.data['request_by'] = '%s %s %s' %(f or '', m or '', l or '')
         return bundle
 
     def alter_list_data_to_serialize(self, request, to_be_serialized):
@@ -63,11 +75,6 @@ class RequestResource(ModelResource):
             for field_name in self._meta.field_list_to_remove:
                 del obj.data[field_name]
         return to_be_serialized
-
-
-
-from tastypie.authorization import Authorization
-from tastypie.exceptions import Unauthorized
 
 
 class UserObjectsOnlyAuthorization(Authorization):

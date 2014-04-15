@@ -18,7 +18,7 @@ class RequestModel(models.Model):
     cnic = models.CharField(_("request_cnic"), null=False, blank=False, max_length=15)
     email = models.EmailField(_("request_email"), null=True, max_length=254)
     phone = models.CharField(_("request_phone"), null=True, max_length=20)
-    request_date = models.DateTimeField(_("request_date"), null=False)
+    request_date = models.DateTimeField(_("request_date"), null=False, auto_now=True)
     # FK
     license_type = models.IntegerField(_("license_type_id"), null=False)
     # FK
