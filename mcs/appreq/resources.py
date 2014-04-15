@@ -12,7 +12,7 @@ from django.utils.timezone import now
 class CustomValidation(Validation):
 
     fn_len, ln_length, cnic_len = 4, 4, 13
-    required = ['request_no', 'first_name', 'last_name', 'license_type', 'mineral_type', 'total_area']
+    required = ['request_no', 'first_name', 'last_name', 'license_type', 'mineral_type', 'total_area', 'phone']
     unique = ['request_no']
 
     # TODO: validate empty strings, invalid integers, data types (can't put strings instead of integers) 
@@ -21,6 +21,9 @@ class CustomValidation(Validation):
             return self.raise_error('Invalid data!')
 
         for key in self.required:
+            if key not in bundle.data:
+                return self.raise_error("%s is a required field!" %(''.join(x for x in key.title()).replace('_',"  "),))
+
             v = bundle.data[key]
             if isinstance(v, basestring) and  len(v) <= 0:
                 return self.raise_error("%s is a required field!" %(''.join(x for x in key.title()).replace('_',"  "),))
@@ -54,7 +57,7 @@ class RequestResource(ModelResource):
         validation = CustomValidation()
         #excludes = ['id', 'email', 'location', 'topo_sheet']
         #fields = ['request_no', 'cnic', 'license_type', 'request_date', 'mineral_type', 'request_status']
-        # authentication = MultiAuthentication(BasicAuthentication(), ApiKeyAuthentication())
+        #authentication = MultiAuthentication(BasicAuthentication(), ApiKeyAuthentication())
         authorization = Authorization()
 
     def hydrate(self, bundle):
