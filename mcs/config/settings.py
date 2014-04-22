@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/1.6/ref/settings/
 from socket import gethostname as localhost
 import os
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+PARENT_DIR = os.path.join(os.path.dirname(__file__), os.path.pardir)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
@@ -24,7 +25,7 @@ DEBUG = localhost() == 'su-precise'
 
 TEMPLATE_DEBUG = True
 
-ALLOWED_HOSTS = ['localhost',]
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition

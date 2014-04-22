@@ -12,7 +12,7 @@ from django.utils.timezone import now
 class CustomValidation(Validation):
 
     fn_len, ln_length, cnic_len = 4, 4, 13
-    required = ['request_no', 'first_name', 'last_name', 'license_type', 'mineral_type', 'total_area', 'phone']
+    required = ['request_no', 'first_name', 'last_name', 'license_type', 'mineral_type', 'total_area', 'phone', 'unit_type', 'topo_sheet', 'location']
     unique = ['request_no']
 
     # TODO: validate empty strings, invalid integers, data types (can't put strings instead of integers) 
@@ -23,10 +23,9 @@ class CustomValidation(Validation):
         for key in self.required:
             if key not in bundle.data:
                 return self.raise_error("%s is a required field!" %(''.join(x for x in key.title()).replace('_',"  "),))
-
             v = bundle.data[key]
             if isinstance(v, basestring) and  len(v) <= 0:
-                return self.raise_error("%s is a required field!" %(''.join(x for x in key.title()).replace('_',"  "),))
+                return self.raise_error("%s must have a valid value!" %(''.join(x for x in key.title()).replace('_',"  "),))
 
         cnic = self.validate_cnic(bundle.data)
         if 'success' in cnic and cnic['success']: return cnic
@@ -63,6 +62,7 @@ class RequestResource(ModelResource):
     def hydrate(self, bundle):
         if bundle and bundle.data:
             bundle.data['request_date'] = now()#datetime.now()
+            bundle.data['request_status'] = 0
             bundle.data['request_status_date'] = now()#datetime.now()
             bundle.data['request_status_remarks'] = 'No comments!'
         return bundle
@@ -103,7 +103,6 @@ class UserObjectsOnlyAuthorization(Authorization):
         for obj in object_list:
             if obj.user == bundle.request.user:
                 allowed.append(obj)
-
         return allowed
 
     def update_detail(self, object_list, bundle):
