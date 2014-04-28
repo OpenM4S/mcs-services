@@ -48,13 +48,13 @@ class CustomValidation(Validation):
     def validate_cnic(self, data):
         cnic = data['cnic'] if 'cnic' in data else None
         if cnic is None or len(str(cnic)) != self.cnic_len:
-            raise_error('CNIC must be {l} digits (No dashes)!'.format(l=3))
+            return raise_error('CNIC must be {l} digits (No dashes)!'.format(l=3))
         return {}
 
 
 ### Request Coordinate Resource -- Bottom
 class CoordinateResource(ModelResource):
-    # request = fields.ToManyField('appreq.resources.RequestResource', 'request', null=True)
+    request = fields.ToOneField('appreq.resources.RequestResource', 'request', null=True)
 
     class Meta:
         allowed_methods = ['get', 'post']
@@ -77,11 +77,8 @@ class RequestResource(ModelResource):
         queryset = Request.objects.all()
         resource_name = 'requests'
         always_return_data = True
-        field_list_to_remove = ['id', 'first_name', 'middle_name', 'last_name', 'email', 'location','phone', 'total_area', 'request_status_remarks', 'unit_type', 'topo_sheet']
+        field_list_to_remove = ['first_name', 'middle_name', 'last_name', 'email', 'location','phone', 'total_area', 'request_status_remarks', 'unit_type', 'topo_sheet']
         validation = CustomValidation()
-        #excludes = ['id', 'email', 'location', 'topo_sheet']
-        #fields = ['request_no', 'cnic', 'license_type', 'request_date', 'mineral_type', 'request_status']
-        #authentication = MultiAuthentication(BasicAuthentication(), ApiKeyAuthentication())
         authorization = Authorization()
 
     def _handle_500(self, request, exception):
@@ -94,8 +91,8 @@ class RequestResource(ModelResource):
         # else:
         #     return super(RequestResource, self)._handle_500(request, exception)
 
-        return super(RequestResource, self)._handle_500(request, exception.message)
-        # return self.error_response(request, {"error": exception}, response_class=http.HttpApplicationError)
+        # return super(RequestResource, self)._handle_500(request, exception.message)
+        return self.error_response(request, {"error": exception}, response_class=http.HttpApplicationError)
  
     def obj_create(self, bundle, **kwargs):
         print 'obj_create', bundle.data
