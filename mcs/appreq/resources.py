@@ -1,5 +1,6 @@
 from tastypie.resources import ModelResource
 from appreq.models import Request, Coordinate
+from appreq.exceptions import CustomBadRequest
 from tastypie.authentication import Authentication, MultiAuthentication
 from tastypie.authentication import BasicAuthentication, ApiKeyAuthentication
 from tastypie.authorization import Authorization
@@ -19,10 +20,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 def raise_error(msg):
-    error = {'success': True, 'message': ''}
-    error['success'] = False
-    error['message'] = msg
-    return error
+    # return {'success': False, 'message': msg or ''}
+    raise CustomBadRequest(msg=msg)
 
 class CustomValidation(Validation):
 
@@ -43,12 +42,14 @@ class CustomValidation(Validation):
                 return raise_error("%s must have a valid value!" %(''.join(x for x in key.title()).replace('_',"  "),))
 
         cnic = self.validate_cnic(bundle.data)
-        if 'success' in cnic and cnic['success']: return cnic
+        print 'after', cnic
+        if 'success' in cnic and not cnic['success']: return cnic
 
     def validate_cnic(self, data):
         cnic = data['cnic'] if 'cnic' in data else None
+        print 'validate_cnic ', cnic
         if cnic is None or len(str(cnic)) != self.cnic_len:
-            return raise_error('CNIC must be {l} digits (No dashes)!'.format(l=3))
+            return raise_error('CNIC must be {l} digits only!'.format(l=self.cnic_len))
         return {}
 
 
@@ -111,8 +112,8 @@ class RequestResource(ModelResource):
 
     def dehydrate(self, bundle):
         # print "dehydrate"
-        f, m, l  = bundle.obj.first_name, bundle.obj.middle_name, bundle.obj.last_name
-        bundle.data['request_by'] = '%s %s %s' %(f or '', m or '', l or '')
+        f, m, l  = bundle.obj.first_name or '', bundle.obj.middle_name or '', bundle.obj.last_name or ''
+        bundle.data['request_by'] = '%s %s %s' %(f, m, l)
         return bundle
 
     def alter_list_data_to_serialize(self, request, to_be_serialized):
