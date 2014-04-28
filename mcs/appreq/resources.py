@@ -49,7 +49,7 @@ class CustomValidation(Validation):
         cnic = data['cnic'] if 'cnic' in data else None
         print 'validate_cnic ', cnic
         if cnic is None or len(str(cnic)) != self.cnic_len:
-            return raise_error('CNIC must be {l} digits only!'.format(l=self.cnic_len))
+            return raise_error('CNIC must be {l} characters with digits only!'.format(l=self.cnic_len))
         return {}
 
 
