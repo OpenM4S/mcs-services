@@ -26,28 +26,29 @@ def raise_error(msg):
 class CustomValidation(Validation):
 
     fn_len, ln_length, cnic_len = 4, 4, 13
-    required = ['request_no', 'first_name', 'last_name', 'license_type', 'mineral_type', 'total_area', 'phone', 'unit_type', 'topo_sheet', 'coordinates']
+    required = ['request_no', 'first_name', 'last_name', 'license_type', 'mineral_type', 'total_area', 'phone', 'unit_type', 'topo_sheet']
     unique = ['request_no']
 
-    # TODO: validate empty strings, invalid integers, data types (can't put strings instead of integers) 
     def is_valid(self, bundle, request=None):
+        # print 'is_valid'
         if not bundle.data:
             return raise_error('Invalid data!')
 
+        is_put = request.method in ['PUT']
         for key in self.required:
-            if key not in bundle.data:
+            if key not in bundle.data and not is_put:
                 return raise_error("%s is a required field!" %(''.join(x for x in key.title()).replace('_',"  "),))
-            v = bundle.data[key]
-            if isinstance(v, basestring) and  len(v) <= 0:
-                return raise_error("%s must have a valid value!" %(''.join(x for x in key.title()).replace('_',"  "),))
-
-        cnic = self.validate_cnic(bundle.data)
-        print 'after', cnic
-        if 'success' in cnic and not cnic['success']: return cnic
+            if key in bundle.data:
+                v = bundle.data[key]
+                if isinstance(v, basestring) and  len(v) <= 0:
+                    return raise_error("%s must have a valid value!" %(''.join(x for x in key.title()).replace('_',"  "),))
+        if not is_put:
+            cnic = self.validate_cnic(bundle.data)
+            if 'success' in cnic and not cnic['success']: return cnic
 
     def validate_cnic(self, data):
         cnic = data['cnic'] if 'cnic' in data else None
-        print 'validate_cnic ', cnic
+        # print 'validate_cnic ', cnic
         if cnic is None or len(str(cnic)) != self.cnic_len:
             return raise_error('CNIC must be {l} characters with digits only!'.format(l=self.cnic_len))
         return {}
@@ -58,22 +59,24 @@ class CoordinateResource(ModelResource):
     request = fields.ToOneField('appreq.resources.RequestResource', 'request', null=True)
 
     class Meta:
-        allowed_methods = ['get', 'post']
+        allowed_methods = ['get', 'post', 'put']
         always_return_data = True
         queryset = Coordinate.objects.all()
         authorization = Authorization()
         resource_name = 'coordinates'
 
     def hydrate(self, bundle):
-        print 'hydrate Coordinates', bundle.data
+        # print 'hydrate Coordinates', bundle.data
+        if 'request_uri' in bundle.data:
+            bundle.data['request'] = bundle.data.pop('request_uri')
         return bundle
 
 ### Request Resource -- Top
 class RequestResource(ModelResource):
-    coordinates = fields.ToManyField('appreq.resources.CoordinateResource', 'coordinates', full=True)
+    coordinates = fields.ToManyField('appreq.resources.CoordinateResource', 'coordinates', full=True, null=True)
 
     class Meta:
-        allowed_methods = ['get', 'post']
+        allowed_methods = ['get', 'post', 'put']
         always_return_data = True
         queryset = Request.objects.all()
         resource_name = 'requests'
@@ -92,17 +95,18 @@ class RequestResource(ModelResource):
         # else:
         #     return super(RequestResource, self)._handle_500(request, exception)
 
-        # return super(RequestResource, self)._handle_500(request, exception.message)
-        return self.error_response(request, {"error": exception}, response_class=http.HttpApplicationError)
+        return super(RequestResource, self)._handle_500(request, exception.message)
+        # return self.error_response(request, {"error": exception}, response_class=http.HttpApplicationError)
  
     def obj_create(self, bundle, **kwargs):
-        print 'obj_create', bundle.data
+        # print 'obj_create'#, bundle.data
         if bundle.data and 'coordinates' not in bundle.data:
             logger.error(Messages.no_coordinates)
             return raise_error(Messages.no_coordinates)
         return super(RequestResource, self).obj_create(bundle, **kwargs)
 
     def hydrate(self, bundle):
+        # print 'hydrate', bundle.data
         if bundle and bundle.data:
             bundle.data['request_date'] = now()
             bundle.data['request_status'] = 0
@@ -118,7 +122,6 @@ class RequestResource(ModelResource):
 
     def alter_list_data_to_serialize(self, request, to_be_serialized):
         for obj in to_be_serialized['objects']:
-            print obj.data
             for field_name in self._meta.field_list_to_remove:
                 if field_name in obj.data: del obj.data[field_name]
         return to_be_serialized

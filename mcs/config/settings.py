@@ -39,6 +39,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'tastypie',
     'appreq',
+    'survey'
 )
 
 MIDDLEWARE_CLASSES = (

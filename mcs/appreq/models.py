@@ -2,13 +2,6 @@ from django.db import models
 from django.utils.translation import ugettext as _
 # Create your models here.
 
-class Container(models.Model):
-    pass
-
-class ContainerItem(models.Model):
-    blog = models.ForeignKey('Container', related_name='items')
-
-
 class Request(models.Model):
     request_no = models.CharField(_("request_no"), max_length=10, null=False, blank=False, unique=True)
     first_name = models.CharField(_("request_first_name"), max_length=30, blank=False, null=False)
@@ -38,7 +31,7 @@ class Request(models.Model):
 
 class Coordinate(models.Model):
     request = models.ForeignKey(Request, related_name='coordinates')
-    # request_coord_no = models.IntegerField(_("request_coordinates_no"), null=False)
+    request_coord_no = models.CharField(_("request_coordinates_no"), max_length=20, null=False)
     latitude = models.DecimalField(_("latitude"), max_digits=8, decimal_places=5, null=False)
     longitude = models.DecimalField(_("longitude"), max_digits=8, decimal_places=5, null=False)
     elevation = models.DecimalField(_("elevation"), max_digits=15, decimal_places=5, null=True)
