@@ -84,6 +84,9 @@ class RequestResource(ModelResource):
         field_list_to_remove = ['first_name', 'middle_name', 'last_name', 'email', 'location','phone', 'total_area', 'request_status_remarks', 'unit_type', 'topo_sheet']
         validation = CustomValidation()
         authorization = Authorization()
+        filtering = {
+            "first_name": ('exact', 'startswith',),
+        }
 
     def _handle_500(self, request, exception):
         # if isinstance(exception, TastypieError):
