@@ -85,10 +85,11 @@ class RequestResource(ModelResource):
         field_list_to_remove = ['first_name', 'middle_name', 'last_name', 'email', 'location','phone', 'total_area', 'request_status_remarks', 'unit_type', 'topo_sheet']
         validation = CustomValidation()
         authorization = Authorization()
+        # TODO filter by status, request_data, 
         filtering = {
-            'first_name': ('exact','contains', 'startswith'),
-            'last_name': ('exact','contains', 'startswith'),
-            'middle_name': ('exact','contains', 'startswith'),
+            'first_name': ALL, # ('exact', ,'contains', 'startswith', 'iexact','icontains', 'istartswith'),
+            'last_name': ALL,  # ('exact', ,'contains', 'startswith', 'iexact','icontains', 'istartswith'),
+            'middle_name': ALL, #('exact', ,'contains', 'startswith', 'iexact','icontains', 'istartswith'),
             'cnic': 'exact',
             'request_no': 'exact',
             'license_type': 'exact',
@@ -96,17 +97,17 @@ class RequestResource(ModelResource):
         }
 
     def _handle_500(self, request, exception):
-        # if isinstance(exception, TastypieError):
-        #     data = {
-        #         'error_message': 
-        #         getattr(settings, 'TASTYPIE_CANNED_ERROR', 'Sorry, this request could not be processed.'),
-        #     }
-        #     return self.error_response(request, data, response_class=http.HttpApplicationError)
-        # else:
-        #     return super(RequestResource, self)._handle_500(request, exception)
+        if isinstance(exception, TastypieError):
+            data = {
+                'error_message': 
+                getattr(settings, 'TASTYPIE_CANNED_ERROR', 'Sorry, this request could not be processed.'),
+            }
+            return self.error_response(request, data, response_class=http.HttpApplicationError)
+        else:
+            return super(RequestResource, self)._handle_500(request, exception)
 
-        return super(RequestResource, self)._handle_500(request, exception.message)
-        # return self.error_response(request, {"error": exception}, response_class=http.HttpApplicationError)
+        # return super(RequestResource, self)._handle_500(request, exception.message)
+        return self.error_response(request, {"error": exception}, response_class=http.HttpApplicationError)
  
     def obj_create(self, bundle, **kwargs):
         # print 'obj_create'#, bundle.data
@@ -118,8 +119,8 @@ class RequestResource(ModelResource):
     def hydrate(self, bundle):
         # print 'hydrate', bundle.data
         if bundle and bundle.data:
-            bundle.data['request_date'] = now()
             bundle.data['request_status'] = 0
+            bundle.data['request_date'] = now()
             bundle.data['request_status_date'] = now()
             bundle.data['request_status_remarks'] = 'No comments!'
         return bundle
