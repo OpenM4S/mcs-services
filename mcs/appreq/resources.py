@@ -14,6 +14,7 @@ from config import settings
 from tastypie import http, fields
 from tastypie.resources import ModelResource
 from tastypie.exceptions import TastypieError
+from tastypie.constants import ALL, ALL_WITH_RELATIONS
 
 from messages import Messages
 import logging
@@ -85,7 +86,13 @@ class RequestResource(ModelResource):
         validation = CustomValidation()
         authorization = Authorization()
         filtering = {
-            "first_name": ('exact', 'startswith',),
+            'first_name': ('exact','contains', 'startswith'),
+            'last_name': ('exact','contains', 'startswith'),
+            'middle_name': ('exact','contains', 'startswith'),
+            'cnic': 'exact',
+            'request_no': 'exact',
+            'license_type': 'exact',
+            'mineral_type': 'exact'
         }
 
     def _handle_500(self, request, exception):
