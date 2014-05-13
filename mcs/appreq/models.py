@@ -38,3 +38,41 @@ class Coordinate(models.Model):
 
     class Meta:
         verbose_name = "coordinates"
+
+class CodeMaster(models.Model):
+    # cm_id
+    name  = models.CharField(_("name"), max_length=30, null=False)
+    display_name = models.CharField(_("display_name"), max_length=50, null=False)
+    description = models.CharField(_("description"), max_length=900, null=False)
+    # islocked
+    # isactive
+
+class CodeDetail(models.Model):
+    # Code_Id
+    cm_id = models.ForeignKey(CodeMaster, related_name='codedetails')
+    name  = models.CharField(_("name"), max_length=30, null=False)
+    display_name = models.CharField(_("display_name"), max_length=50, null=False)
+    short_name = models.CharField(_("short_name"), max_length=30, null=False)
+    description = models.CharField(_("description"), max_length=900, null=False)
+    sequence_no = models.IntegerField(_("sequence_no"), null=False)
+    value = models.IntegerField(_("value"), null=False)
+    range_from = models.IntegerField(_("range_from"), null=False)
+    range_to = models.IntegerField(_("range_to"), null=False)
+    # is_default
+    # is_active
+    # color
+
+class Mineral(models.Model):
+    # mineral_id
+    # mineral_no
+    mineral_name = models.CharField(_("mineral_name"), max_length=30, null=False)
+    chemical_formula = models.CharField(_("formula"), max_length=200, null=False)
+    description = models.CharField(_("description"), max_length=900, null=False)
+    mineral_category = models.ForeignKey(CodeDetail, related_name='minerals1')
+    mineral_type = models.ForeignKey(CodeDetail, related_name='minerals2')
+    rock_category = models.ForeignKey(CodeDetail, related_name='minerals3')
+    rock_type = models.ForeignKey(CodeDetail, related_name='minerals4')
+    mineral_unit = models.ForeignKey(CodeDetail, related_name='minerals5')
+    group = models.ForeignKey(CodeDetail, related_name='minerals')
+    # image
+    # isactive
