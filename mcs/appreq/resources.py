@@ -93,7 +93,8 @@ class RequestResource(ModelResource):
             'cnic': 'exact',
             'request_no': 'exact',
             'license_type': 'exact',
-            'mineral_type': 'exact'
+            'mineral_type': 'exact',
+            'request_status': 'exact'
         }
 
     def _handle_500(self, request, exception):
@@ -119,7 +120,7 @@ class RequestResource(ModelResource):
     def hydrate(self, bundle):
         # print 'hydrate', bundle.data
         if bundle and bundle.data:
-            if not bundle.data['request_status']:
+            if not 'request_status' in bundle.data or bundle.data['request_status'] is None:
                 bundle.data['request_status'] = 0
             bundle.data['request_date'] = now()
             bundle.data['request_status_date'] = now()
