@@ -6,42 +6,55 @@ class CodeMaster(models.Model):
     # cm_id
     name  = models.CharField(_("name"), max_length=30, null=False)
     display_name = models.CharField(_("display_name"), max_length=50, null=False)
-    description = models.CharField(_("description"), max_length=900, null=False)
-    islocked = models.BooleanField()
-    isactive = models.BooleanField()
+    description = models.CharField(_("description"), max_length=900, null=True)
+    is_locked = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+
+    def __unicode__(self):
+        return self.display_name
 
 class CodeDetail(models.Model):
     # Code_Id
-    cm_id = models.ForeignKey(CodeMaster, related_name='codedetails')
+    code_master = models.ForeignKey(CodeMaster, related_name='details')
     name  = models.CharField(_("name"), max_length=30, null=False)
     display_name = models.CharField(_("display_name"), max_length=50, null=False)
-    short_name = models.CharField(_("short_name"), max_length=30, null=False)
-    description = models.CharField(_("description"), max_length=900, null=False)
-    sequence_no = models.IntegerField(_("sequence_no"), null=False)
-    value = models.IntegerField(_("value"), null=False)
-    range_from = models.IntegerField(_("range_from"), null=False)
-    range_to = models.IntegerField(_("range_to"), null=False)
-    is_default =  models.BooleanField()
-    is_active =  models.BooleanField()
+    short_name = models.CharField(_("short_name"), max_length=30, null=True)
+    description = models.CharField(_("description"), max_length=900, null=True)
+    sequence_no = models.IntegerField(_("sequence_no"), null=True)
+    value = models.IntegerField(_("value"), null=True)
+    range_from = models.IntegerField(_("range_from"), null=True)
+    range_to = models.IntegerField(_("range_to"), null=True)
+    is_default =  models.BooleanField(default=False)
+    is_active =  models.BooleanField(default=True)
+
+    def __unicode__(self):
+        return self.display_name
+
+    def toJson(self):
+        return {'id':self.id, 'name' : self.name}
 
 class Mineral(models.Model):
+    dictionary = {}
     # mineral_id
     mineral_no = models.IntegerField(_("mineral_no"), max_length=20, null=False)
     mineral_name = models.CharField(_("mineral_name"), max_length=30, null=False)
-    chemical_formula = models.CharField(_("formula"), max_length=200, null=False)
-    description = models.CharField(_("description"), max_length=900, null=False)
-    mineral_category = models.ForeignKey(CodeDetail, related_name='minerals_category')
-    mineral_type = models.ForeignKey(CodeDetail, related_name='minerals_mineral_type')
-    rock_category = models.ForeignKey(CodeDetail, related_name='minerals_rock_category')
-    rock_type = models.ForeignKey(CodeDetail, related_name='minerals_rock_type')
-    mineral_unit = models.ForeignKey(CodeDetail, related_name='minerals_mineral_unit')
-    group = models.ForeignKey(CodeDetail, related_name='minerals_group')
+    chemical_formula = models.CharField(_("formula"), max_length=200, null=True)
+    description = models.CharField(_("description"), max_length=900, null=True)
+    mineral_category = models.IntegerField(_("mineral_category"), null=True) #models.ForeignKey(CodeDetail, related_name='mineral_category')
+    mineral_type = models.IntegerField(_("mineral_type"), null=True) #models.ForeignKey(CodeDetail, related_name='mineral_mineral_type')
+    # mineral_unit = models.ForeignKey(CodeDetail, related_name='mineral_mineral_unit')
+    # rock_category = models.ForeignKey(CodeDetail, related_name='mineral_rock_category')
+    # rock_type = models.ForeignKey(CodeDetail, related_name='mineral_rock_type')
+    # group = models.ForeignKey(CodeDetail, related_name='mineral_group')
     image = models.ImageField(upload_to='img/')
-    isactive = models.BooleanField()
-    istransferable = models.BooleanField()
-    isextendable = models.BooleanField()
     process_duration = models.IntegerField(_("range_to"), null=False)
     expire_before = models.IntegerField(_("range_to"), null=False)
+    is_active = models.BooleanField(default=True)
+    is_transferable = models.BooleanField()
+    is_extendable = models.BooleanField()
+
+    def __unicode__(self):
+        return self.mineral_name
 
 class License(models.Model):
     # license_type_id
@@ -56,8 +69,11 @@ class License(models.Model):
     parent_id = models.IntegerField(_("parent_id"), null=False)
     process_duration = models.IntegerField(_("process_duration"), null=False)
     expire_before = models.IntegerField(_("expire_before"), null=False)
-    istransferable = models.BooleanField()
-    isextendable = models.BooleanField()
+    is_transferable = models.BooleanField()
+    is_extendable = models.BooleanField()
+
+    def __unicode__(self):
+        return self.name
 
 class Request(models.Model):
     request_no = models.CharField(_("request_no"), max_length=10, null=False, blank=False, unique=True)
@@ -84,6 +100,9 @@ class Request(models.Model):
     class Meta:
         verbose_name = "Application Request"
 
+    def __unicode__(self):
+        return "Request by {fn} {ln}".format(fn=self.first_name,ln=self.last_name)
+
 class Coordinate(models.Model):
     request = models.ForeignKey(Request, related_name='coordinates')
     request_coord_no = models.CharField(_("request_coordinates_no"), max_length=20, null=False)
@@ -93,3 +112,6 @@ class Coordinate(models.Model):
 
     class Meta:
         verbose_name = "coordinates"
+
+    def __unicode__(self):
+        return "Latitude: {lat}, Longitude: {lon}".format(lat=self.latitude,lon=self.longitude)

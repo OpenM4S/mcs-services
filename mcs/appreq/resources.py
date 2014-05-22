@@ -1,5 +1,5 @@
 from tastypie.resources import ModelResource
-from appreq.models import Request, Coordinate
+from appreq.models import Request, Coordinate, CodeDetail, CodeMaster, Mineral
 from appreq.exceptions import CustomBadRequest
 from tastypie.authentication import Authentication, MultiAuthentication
 from tastypie.authentication import BasicAuthentication, ApiKeyAuthentication
@@ -119,7 +119,8 @@ class RequestResource(ModelResource):
     def hydrate(self, bundle):
         # print 'hydrate', bundle.data
         if bundle and bundle.data:
-            bundle.data['request_status'] = 0
+            if not bundle.data['request_status']:
+                bundle.data['request_status'] = 0
             bundle.data['request_date'] = now()
             bundle.data['request_status_date'] = now()
             bundle.data['request_status_remarks'] = 'No comments!'
@@ -136,6 +137,120 @@ class RequestResource(ModelResource):
             for field_name in self._meta.field_list_to_remove:
                 if field_name in obj.data: del obj.data[field_name]
         return to_be_serialized
+
+### Master
+class MasterResource(ModelResource):
+
+    details = fields.ToManyField('appreq.resources.DetailResource', 'details', full=True, null=True)
+    
+    class Meta:
+        allowed_methods = ['get', 'post', 'put']
+        always_return_data = True
+        queryset = CodeMaster.objects.all()
+        resource_name = 'master'
+        always_return_data = True
+        authorization = Authorization()
+        filtering = {
+            # 'mineral_type': 'exact'
+        }
+
+    def _handle_500(self, request, exception):
+        if isinstance(exception, TastypieError):
+            data = {
+                'error_message': 
+                getattr(settings, 'TASTYPIE_CANNED_ERROR', 'Sorry, this request could not be processed.'),
+            }
+            return self.error_response(request, data, response_class=http.HttpApplicationError)
+        else:
+            return super(MasterResource, self)._handle_500(request, exception)
+
+        # return super(RequestResource, self)._handle_500(request, exception.message)
+        return self.error_response(request, {"error": exception}, response_class=http.HttpApplicationError)
+ 
+    def hydrate(self, bundle):
+        print 'hydrate MasterResource'
+        return bundle
+
+    def dehydrate(self, bundle):
+        print "dehydrate MasterResource"
+        return bundle
+
+### Detail
+class DetailResource(ModelResource):
+
+    master = fields.ToOneField(MasterResource, 'master', related_name='details', null=True)
+    # mineral_categorys = fields.ToManyField('appreq.resources.MineralResource', 'mineral_categorys', full=True, null=True)
+    # mineral_types = fields.ToManyField('appreq.resources.MineralResource', 'mineral_types', full=True, null=True)
+
+    class Meta:
+        allowed_methods = ['get', 'post', 'put']
+        always_return_data = True
+        queryset = CodeDetail.objects.all()
+        resource_name = 'detail'
+        always_return_data = True
+        authorization = Authorization()
+        filtering = {
+            # 'name': 'exact'
+        }
+
+    def _handle_500(self, request, exception):
+        if isinstance(exception, TastypieError):
+            data = {
+                'error_message': 
+                getattr(settings, 'TASTYPIE_CANNED_ERROR', 'Sorry, this request could not be processed.'),
+            }
+            return self.error_response(request, data, response_class=http.HttpApplicationError)
+        else:
+            return super(DetailResource, self)._handle_500(request, exception)
+
+        # return super(RequestResource, self)._handle_500(request, exception.message)
+        return self.error_response(request, {"error": exception}, response_class=http.HttpApplicationError)
+ 
+    def hydrate(self, bundle):
+        print 'hydrate DetailResource'
+        return bundle
+
+    def dehydrate(self, bundle):
+        print "dehydrate DetailResource"
+        return bundle
+
+
+### Mineral
+class MineralResource(ModelResource):
+
+    class Meta:
+        allowed_methods = ['get', 'post', 'put']
+        always_return_data = True
+        queryset = Mineral.objects.all()
+        resource_name = 'mineral'
+        always_return_data = True
+        authorization = Authorization()
+        filtering = {
+            # 'name': 'exact'
+        }
+
+    def _handle_500(self, request, exception):
+        if isinstance(exception, TastypieError):
+            data = {
+                'error_message': 
+                getattr(settings, 'TASTYPIE_CANNED_ERROR', 'Sorry, this request could not be processed.'),
+            }
+            return self.error_response(request, data, response_class=http.HttpApplicationError)
+        else:
+            return super(MineralResource, self)._handle_500(request, exception)
+
+        # return super(RequestResource, self)._handle_500(request, exception.message)
+        return self.error_response(request, {"error": exception}, response_class=http.HttpApplicationError)
+ 
+    def hydrate(self, bundle):
+        print 'hydrate MineralResource'
+        return bundle
+
+    def dehydrate(self, bundle):
+        print "dehydrate MineralResource"
+        # bundle.data['mineral_category'] = bundle.obj.mineral_category.toJson()
+        # bundle.data['mineral_type'] = bundle.obj.mineral_type.toJson()
+        return bundle
 
 ###
 class UserObjectsOnlyAuthorization(Authorization):

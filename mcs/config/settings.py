@@ -23,7 +23,16 @@ SECRET_KEY = 'v-^9j%f4s1$xa1=#p-eaii%m##t4p)#wy3mw#p#n(&@9rv(q4&'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = localhost() == 'su-precise'
 
-TEMPLATE_DEBUG = True
+TEMPLATE_DEBUG = True 
+
+TEMPLATE_DIRS = (PARENT_DIR + '/templates/',)
+
+TEMPLATE_LOADERS = (
+    'django.template.loaders.filesystem.Loader',
+    'django.template.loaders.app_directories.Loader'
+    )
+
+# print TEMPLATE_DIRS
 
 ALLOWED_HOSTS = ['*']
 
