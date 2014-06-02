@@ -10,10 +10,11 @@ https://docs.djangoproject.com/en/1.6/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 from socket import gethostname as localhost
-import os
+import os, sys
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 PARENT_DIR = os.path.join(os.path.dirname(__file__), os.path.pardir)
 
+sys.path.insert(0, BASE_DIR)
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
 
