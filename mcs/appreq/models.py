@@ -85,9 +85,9 @@ class Request(models.Model):
     phone = models.CharField(_("request_phone"), null=True, max_length=20)
     request_date = models.DateTimeField(_("request_date"), null=False, auto_now=True)
     # FK
-    license_type = models.ForeignKey(CodeDetail, related_name='request_license_type')
+    # license_type = models.ForeignKey(CodeDetail, related_name='request_license_type')
     # FK
-    mineral_type = models.ForeignKey(CodeDetail, related_name='request_mineral_type')
+    mineral_id = models.IntegerField(_("mineral_id"), null=False)#models.ForeignKey(CodeDetail, related_name='request_mineral_type')
     # FK
     total_area = models.IntegerField(_("total_area"), null=False)
     # FK

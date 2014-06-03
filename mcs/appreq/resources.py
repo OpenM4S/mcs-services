@@ -27,7 +27,7 @@ def raise_error(msg):
 class CustomValidation(Validation):
 
     fn_len, ln_length, cnic_len = 4, 4, 13
-    required = ['request_no', 'first_name', 'last_name', 'license_type', 'mineral_type', 'total_area', 'phone', 'unit_type', 'topo_sheet']
+    required = ['request_no', 'first_name', 'last_name', 'license_type', 'mineral_id', 'total_area', 'phone', 'unit_type', 'topo_sheet']
     unique = ['request_no']
 
     def is_valid(self, bundle, request=None):
@@ -67,7 +67,7 @@ class CoordinateResource(ModelResource):
         resource_name = 'coordinates'
 
     def hydrate(self, bundle):
-        # print 'hydrate Coordinates', bundle.data
+        print 'hydrate Coordinates', bundle.data
         if 'request_uri' in bundle.data:
             bundle.data['request'] = bundle.data.pop('request_uri')
         return bundle
@@ -108,7 +108,9 @@ class RequestResource(ModelResource):
             return super(RequestResource, self)._handle_500(request, exception)
 
         # return super(RequestResource, self)._handle_500(request, exception.message)
-        return self.error_response(request, {"error": exception}, response_class=http.HttpApplicationError)
+        error = self.error_response(request, {"error": exception}, response_class=http.HttpApplicationError)
+        print error
+        return error
  
     def obj_create(self, bundle, **kwargs):
         # print 'obj_create'#, bundle.data
@@ -118,19 +120,27 @@ class RequestResource(ModelResource):
         return super(RequestResource, self).obj_create(bundle, **kwargs)
 
     def hydrate(self, bundle):
-        # print 'hydrate', bundle.data
+        print 'hydrate', bundle.data
         if bundle and bundle.data:
             if not 'request_status' in bundle.data or bundle.data['request_status'] is None:
                 bundle.data['request_status'] = 0
             bundle.data['request_date'] = now()
             bundle.data['request_status_date'] = now()
             bundle.data['request_status_remarks'] = 'No comments!'
+        if bundle.data['coordinates'] is None:
+            bundle.data['coordinates'] = []
+            print 'coordinates was None'
+            print bundle.data
         return bundle
 
     def dehydrate(self, bundle):
         # print "dehydrate"
         f, m, l  = bundle.obj.first_name or '', bundle.obj.middle_name or '', bundle.obj.last_name or ''
         bundle.data['request_by'] = '%s %s %s' %(f, m, l)
+        mid = bundle.data['mineral_id']
+        mo = Mineral.objects.filter(id=mid)[0]
+        if mo:
+            bundle.data['mineral_id'] = mo.mineral_name
         return bundle
 
     def alter_list_data_to_serialize(self, request, to_be_serialized):
